@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela Inicial</title>
+    <!-- Importando a fonte do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos básicos para a tela inicial */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center; /* Centraliza horizontalmente */
+            align-items: center; /* Centraliza verticalmente */
+            font-family: 'Roboto', sans-serif; /* Usando a fonte Roboto */
+            background-color: #818181; /* Cor de fundo para a página */
+        }
+        #game-container {
+            position: relative;
+            width: 1500px; /* Dimensões do jogo */
+            height: 850px; /* Dimensões do jogo */
+            background-image: url('assets/background.avif'); /* Imagem de fundo */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            color: #ff0000;
+            font-size: 8em; /* Tamanho do título */
+            margin-bottom: 20px;
+        }
+        .game-button { 
+            padding: 15px 30px;
+            margin: 15px;
+            font-size: 1.5em;
+            background-color: #185de9;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .game-button:hover {
+            background-color: #d00404; /* Efeito de hover nos botões */
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1 id="title">MÚSICA SEM PAUSA ♪♫</h1>
+        <div class="button-container">
+            <button id="start-button" class="game-button">Iniciar</button>
+            <button id="config-button" class="game-button">Narrativa</button>
+            <button id="exit-button" class="game-button">Controles</button>
+        </div>
+    </div>
+    <script>
+        const startButton = document.getElementById('start-button');
+        const configButton = document.getElementById('config-button');
+        const exitButton = document.getElementById('exit-button');  
+        
+        // Função para iniciar o jogo
+        function startGame() {
+            console.log("Iniciando o jogo...");
+            window.location.href = "jogo.html";
+        }
+
+        // Função para mostrar a narrativa
+        function narraGame() {
+            console.log("Narrando o jogo...");
+            alert("Em “Música Sem Pausa”, a música do mundo está sendo interrompida por símbolos de pausa que caem do céu, ameaçando silenciar as melodias. Como um herói musical, sua missão é destruir esses símbolos e coletar as notas que caem, garantindo que as músicas não parem. A cada nota correta que você pega, a melodia continua, mas se você falhar e deixar os símbolos de pausa atingirem o chão, a música será silenciada. O desafio é garantir que a harmonia nunca acabe, enfrentando o ritmo das notas e obstáculos em sua jornada musical.");
+        }
+
+        // Função para mostrar os controles
+        function contGame() {
+            console.log("Apresentando os controles do jogo...");
+            alert("Controles do Jogo:\nUse as setas do teclado para controlar o piano.\nA seta para esquerda move o piano para a esquerda, e a seta para direita o move para a direita.\nPara lançar a Clave de Sol, pressione a seta para cima, que destruirá os símbolos de pausa no caminho.\nColete as notas azuis para ganhar pontos. Se pegar uma nota vermelha, o jogo acaba.\nCuidado para que as notas não caiam na área vermelha!");
+        }
+
+        startButton.addEventListener('click', startGame);
+        configButton.addEventListener('click', narraGame); 
+        exitButton.addEventListener('click', contGame);  
+    </script>
+</body>
+</html>

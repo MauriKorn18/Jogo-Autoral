@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Music Game</title>
+        <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+        <script src="scenes/jogo.js"></script>
+        <script src="scenes/inicio.js"></script>
+
+        <style>
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #818181;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+        <script>
+
+            var game;
+            var piano;
+            var notas;
+            var claves;
+            var cursors;
+            var speedBoost = 300;
+            var score = 0;
+            var gameTime = 0;
+            var isGamePaused = false;
+            var scoreText;
+            var timerText;
+
+            var notasCorretas = ['nota1', 'nota2', 'nota3'];
+            var notasErradas = ['errada1', 'errada2'];
+
+            var config = {
+                type: Phaser.AUTO,
+                width: 1500,
+                height: 850,
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { y: 0 },
+                        debug: false
+                    }
+                },
+                scene: {
+                    preload: preload,
+                    create: create,
+                    update: update
+                },
+            };
+
+            game = new Phaser.Game(config);
+
+            function preload() {
+                this.load.image('background', 'assets/background.avif');
+                this.load.image('piano', 'assets/piano.png');
+                this.load.image('nota1', 'assets/nota1.png');
+                this.load.image('nota2', 'assets/nota2.png');
+                this.load.image('nota3', 'assets/nota3.png');
+                this.load.image('errada1', 'assets/errada1.png');
+                this.load.image('errada2', 'assets/errada2.png');
+                this.load.image('clave', 'assets/clave.png');
+            }
+
+            function create() {
+                this.add.image(0, 0, 'background').setOrigin(0, 0).setDisplaySize(this.scale.width, this.scale.height);
+
+                // Desenhando a linha vermelha visível 
+                var graphics = this.add.graphics();
+                graphics.fillStyle(0xff0000, 0.7); 
+                graphics.fillRect(0, this.scale.height - 65, this.scale.width, 65);
+
+                // Criando as notas 
+                notas = this.physics.add.group();
+                claves = this.physics.add.group();
+
+                // Criando a linha de Game Over como um objeto estático de física 
+                linhaDeGameOver = this.physics.add.staticGroup();
+                var linha = linhaDeGameOver.create(this.scale.width / 190, this.scale.height - 55); 
+                linha.setSize(this.scale.width, 65); // Ajuste da área de colisão
+                linha.setOffset(0, 5);
+                linha.setVisible(false);
+
+                // Criando o piano 
+                piano = this.physics.add.sprite(this.scale.width / 2, this.scale.height - 50, 'piano').setImmovable();
+                piano.body.allowGravity = false;
+                piano.body.setCollideWorldBounds(true);
+                piano.setScale(0.2);
+
+                // Criando as colisões, depois que todos os objetos foram criados
+                this.physics.add.collider(notas, linhaDeGameOver, function(nota) {
+                    gameOver(this);
+                    nota.destroy();
+                }, null, this);
+
+                this.physics.add.collider(piano, notas, coletarNota, null, this);
+                this.physics.add.collider(claves, notas, explodirNota, null, this);
+
+                cursors = this.input.keyboard.createCursorKeys();
+
+                this.time.addEvent({
+                    delay: 3200,
+                    callback: spawnNota,
+                    callbackScope: this,
+                    loop: true
+                });
+
+                scoreText = this.add.text(10, 10, 'Notas certas: 0', { fontSize: '24px', fill: '#fff' });
+                timerText = this.add.text(10, 40, 'Tempo: 0s', { fontSize: '24px', fill: '#fff' });
+
+                this.input.keyboard.on('keydown-UP', lancarclave, this);
+                this.time.addEvent({
+                    delay: 1000,
+                    callback: aumentarDificuldade,
+                    callbackScope: this,
+                    loop: true
+                });
+            }
+
+            function update() {
+                // Velocidade do piano
+                if (cursors.left.isDown) {
+                    piano.x -= 30;
+                }
+                if (cursors.right.isDown) {
+                    piano.x += 30;
+                }
+            }
+
+            function spawnNota() {
+                if (isGamePaused) return;
+
+                // Gerando uma posição aleatória no eixo X
+                let x = Phaser.Math.Between(50, game.scale.width - 50);
+
+                // Escolhendo uma nota aleatória
+                let notaKey = Phaser.Math.RND.pick(['nota1', 'nota2', 'nota3', 'errada1', 'errada2']);
+                
+                // Criando a nota com a posição inicial
+                let nota = notas.create(x, 100, notaKey);
+
+                // Configurando a física para a nota
+                nota.setVelocityY(speedBoost); // Isso vai permitir que a nota caia até o fundo da tela
+                nota.setGravityY(100); // Adiciona gravidade para a nota cair naturalmente
+   
+                // Tamanho das notas
+                if (notaKey === 'nota1') {
+                    nota.setScale(0.45);  //Se a nota for a 'nota1', aumente o tamanho em 0.45
+                } else {
+                    nota.setScale(0.2);  //Se a nota não for a 'nota1', aumente o tamanho em 0.2
+                }
+
+                // Garantindo que a nota colida com as bordas do mundo
+                nota.body.setCollideWorldBounds(true);
+            }
+
+            function coletarNota(piano, nota) {
+                // Função da coleta das notas
+                if (!nota) return;
+
+                if (nota.texture.key.startsWith('errada')) {
+                    gameOver(this); // Se coletar a nota errada => game over
+                } else {
+                    score++;
+                    scoreText.setText('Notas certas: ' + score); // Se coletar a nota correta => + 1 ponto
+                }
+                nota.destroy();
+            }
+
+            function lancarclave() {
+                // Função de lançar a clave/bomba para a destruição das notas erradas
+                let clave = claves.create(piano.x, piano.y - 50, 'clave');
+                clave.setVelocityY(-500);
+                clave.setCollideWorldBounds(true);
+                clave.setGravityY(-300);
+                clave.setScale(0.05);
+            }
+
+            function explodirNota(clave, nota) {
+                if (nota.texture.key.startsWith('errada', 'nota')) { // Verifica se a nota é do tipo "errada"
+                    nota.destroy(); // Destrói a nota se for do tipo "errada"
+                }
+                clave.destroy(); // Destrói a clave que foi lançada
+            }
+
+            function aumentarDificuldade() {
+                gameTime++; // Incrementa o tempo de jogo a cada vez que a função é chamada
+                timerText.setText('Tempo: ' + gameTime + 's'); // Atualiza o texto na tela mostrando o tempo de jogo
+                if (gameTime % 12 === 0) { // Verifica se o tempo de jogo é múltiplo de 15
+                    speedBoost += 20; // Aumenta a velocidade das notas caindo em 15 unidades
+                }
+            }
+
+            function gameOver(scene) {
+                // Pausa o jogo, impedindo que o movimento e as colisões aconteçam
+                isGamePaused = true;
+                scene.physics.pause();
+
+                // Quando estando na tela de Game Over, para o contador de tempo
+                scene.time.removeAllEvents();
+
+                // Cria um texto de "Game Over" no centro da tela
+                let gameOverText = scene.add.text(game.scale.width / 2, game.scale.height / 2, 'GAME OVER!\nPressione ESPAÇO para reiniciar', {
+                    fontSize: '40px',
+                    fill: '#ff0000'
+                });
+                gameOverText.setOrigin(0.5); // Alinha o texto no centro da tela, definindo a origem do texto para o centro
+
+                scene.input.keyboard.once('keydown-SPACE', () => {
+                    // Resetando a pontuação e o tempo ao reiniciar o jogo
+                    score = 0;
+                    gameTime = 0;
+                    scoreText.setText('Notas certas: 0');
+                    timerText.setText('Tempo: 0s');
+
+                    // Reiniciando o evento de tempo
+                    scene.time.removeAllEvents();
+                    scene.time.addEvent({
+                        delay: 1000,
+                        callback: aumentarDificuldade,
+                        callbackScope: scene,
+                        loop: true
+                    });
+
+                    // Reiniciando a cena do jogo
+                    scene.scene.restart();
+                    isGamePaused = false;
+                });
+            }
+
+        </script>
+    </body>
+</html>
