@@ -15,8 +15,6 @@
 
             body {
                 display: flex;
-                justify-content: center;
-                align-items: center;
                 height: 100vh;
                 margin: 0;
                 background-color: #818181;
@@ -46,8 +44,10 @@
 
             var config = {
                 type: Phaser.AUTO,
-                width: 1500,
-                height: 850,
+                scale: {
+                    mode: Phaser.Scale.RESIZE,
+                    autoCenter: Phaser.Scale.CENTER_BOTH,
+                },
                 physics: {
                     default: 'arcade',
                     arcade: {
@@ -133,10 +133,10 @@
             function update() {
                 // Velocidade do piano
                 if (cursors.left.isDown) {
-                    piano.x -= 30;
+                    piano.x -= 20;
                 }
                 if (cursors.right.isDown) {
-                    piano.x += 30;
+                    piano.x += 20;
                 }
             }
 
@@ -200,7 +200,7 @@
                 gameTime++; // Incrementa o tempo de jogo a cada vez que a função é chamada
                 timerText.setText('Tempo: ' + gameTime + 's'); // Atualiza o texto na tela mostrando o tempo de jogo
                 if (gameTime % 12 === 0) { // Verifica se o tempo de jogo é múltiplo de 15
-                    speedBoost += 20; // Aumenta a velocidade das notas caindo em 15 unidades
+                    speedBoost += 20; // Aumenta a velocidade das notas caindo em 20 unidades
                 }
             }
 
